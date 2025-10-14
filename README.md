@@ -1,2 +1,5 @@
 # Graph-TempCZ
 code for Graph-TempCZ
+
+Understanding how software is used, shared, and evolves across publications is essential to studying scientific progress. Existing analyses often rely on aggregated statistics or textual co-occurrence, overlooking the structural and temporal dynamics of software usage. We address these gaps by framing software citation as a link prediction problem on graphs and extending it to temporal link prediction. To support this study, we construct the first large-scale graph dataset of publication and software mentions, \textbf{Graph-TempCZ}, covering 1959-2022 with over six million mention relationships. Experiments using both traditional machine learning and Graph Neural Network (GNN) show that graph-based models substantially outperform feature-based baselines, achieving a test accuracy of $92.88\%$. Temporal experiments further reveal that models trained on one year generalize effectively to nearby years but show gradual performance decay as the temporal gap increases. This work provides the first comprehensive foundation for analyzing software usage through a temporal graph perspective. 
+
