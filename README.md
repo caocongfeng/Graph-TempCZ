@@ -1,5 +1,77 @@
 # Graph-TempCZ
-code for Graph-TempCZ
+Graph-TempCZ is a large-scale heterogeneous graph dataset for studying how scientific publications mention and re-use software over time. The repository hosts experimentation code for embedding-based link prediction, topology-driven baselines, and temporal generalization across publication years.
 
-Understanding how software is used, shared, and evolves across publications is essential to studying scientific progress. Existing analyses often rely on aggregated statistics or textual co-occurrence, overlooking the structural and temporal dynamics of software usage. We address these gaps by framing software citation as a link prediction problem on graphs and extending it to temporal link prediction. To support this study, we construct the first large-scale graph dataset of publication and software mentions, \textbf{Graph-TempCZ}, covering 1959-2022 with over six million mention relationships. Experiments using both traditional machine learning and Graph Neural Network (GNN) show that graph-based models substantially outperform feature-based baselines, achieving a test accuracy of $92.88\%$. Temporal experiments further reveal that models trained on one year generalize effectively to nearby years but show gradual performance decay as the temporal gap increases. This work provides the first comprehensive foundation for analyzing software usage through a temporal graph perspective. 
+![Top 10 software overall](top10software.png)
+![Top 10 software by publication year](top_10software_of_each_year.png)
 
+- [Graph-TempCZ Overview (Part 1)](1.pdf)
+- [Modeling Pipeline Notes (Part 2)](2.pdf)
+- [Temporal Evaluation Slides (Part 3)](3.pdf)
+
+## Key Features
+- 6M+ mention edges between publications and software entities spanning 1959–2022.
+- Sentence-transformer embeddings fused with graph neural networks for heterogenous link prediction.
+- Heuristic topology-only and hybrid topology + embedding baselines.
+- Temporal split utilities to test cross-year generalization.
+
+## Environment Setup
+Graph-TempCZ experiments were developed with Python 3.9+ and PyTorch. The following packages cover the main entry points:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install torch torchvision torchaudio \
+    torch-geometric torch-sparse torch-scatter torch-cluster torch-spline-conv \
+    sentence-transformers pandas numpy scikit-learn tqdm wandb matplotlib seaborn \
+    networkx psutil xgboost
+```
+
+> **Note:** Install the exact PyTorch and PyG wheels that match your CUDA version following the instructions at https://pytorch.org and https://pytorch-geometric.readthedocs.io if you use GPUs.
+
+## Data Preparation
+1. Obtain the core CSV files:
+   - `single_graph_merged_data.csv`: raw publication–software mention graph.
+   - `single_graph_merged_data_label.csv`: graph with positive/negative labels for supervised training.
+2. Place the files so that the scripts can find them. By default they expect a layout one level above the repository:
+   ```
+   Graph-TempCZ/
+   └── ../datasets/
+       ├── single_graph_merged_data.csv
+       └── single_graph_merged_data_label.csv
+   ```
+   Adjust the hard-coded `DATA_PATH` values in each script if you prefer a different location.
+3. (Optional) Inspect the dataset statistics and schema in `1.pdf`–`3.pdf`, which summarize sampling strategies, temporal splits, and evaluation settings.
+
+## Quick Start
+1. Activate your environment and ensure the CSV files are reachable (see *Data Preparation*).
+2. Run an embedding-enhanced GNN baseline:
+   ```bash
+   python GNN.py
+   ```
+   The script logs metrics (AUC, AP, F1, Recall) and stores test predictions with timestamps.
+3. Evaluate temporal robustness with cached embeddings and year-wise splits:
+   ```bash
+   python temporal_link_prediction.py
+   ```
+4. Explore topology-only and hybrid baselines:
+   ```bash
+   python feature_embedding_link_prediction.py
+   python topology_embedding_link_prediction.py
+   python topology_and_embedding_combination_link_prediction.py
+   ```
+   These scripts produce heuristic scores, train XGBoost classifiers, and compare against GNN outputs.
+
+## Script Guide
+- `GNN.py`: Builds sentence-transformer embeddings, constructs a PyG heterogeneous graph, trains a GraphSAGE-based link predictor with focal loss, and logs to Weights & Biases when available.
+- `temporal_link_prediction.py`: Implements single-year training with temporal splits, aggressive caching of embeddings/graphs, and evaluation across multiple test years.
+- `feature_embedding_link_prediction.py`: Generates negative samples, combines embedding features with classical link predictors, and trains baselines for comparison.
+- `topology_embedding_link_prediction.py`: Focuses on topology-centric heuristics (common neighbors, Adamic-Adar, etc.) alongside machine learning models such as XGBoost.
+- `topology_and_embedding_combination_link_prediction.py`: Fuses handcrafted topology scores and embedding similarities into a single feature set for downstream classification.
+- `top10software.png`, `top_10software_of_each_year.png`: Visualizations of the most frequently mentioned software overall and per year; cite these figures when discussing dataset composition.
+- `1.pdf`, `2.pdf`, `3.pdf`: Supplementary slide decks covering dataset design choices, modeling pipeline details, and temporal performance highlights.
+
+## Reproducibility Tips
+- Set `WANDB_MODE=offline` if you prefer local-only logging.
+- Configure `CUDA_VISIBLE_DEVICES` before running scripts to control GPU usage, or expect CPU execution on machines without CUDA.
+- Use the caching directories created by `temporal_link_prediction.py` (`./single_year_split_cache_refine_2020_2021/`) to store embeddings and split metadata for repeatable experiments.
