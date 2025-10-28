@@ -202,13 +202,13 @@ def build_graph_edges_up_to_year_cached(data_df: pd.DataFrame, max_year: int) ->
         try:
             df = pd.read_parquet(path)
             if {'pmcid','ID'}.issubset(df.columns):
-                logging.info(f"已加载缓存的图结构边（== {max_year}）：{len(df)} 条")
+                logging.info(f"已加载缓存的图结构边（<= {max_year}）：{len(df)} 条")
                 return df
         except Exception as e:
             logging.warning(f"读取缓存图结构失败，将重新构建：{e}")
-    sub = data_df.loc[data_df['pubyear'] == max_year, ['pmcid','ID']].drop_duplicates()
+    sub = data_df.loc[data_df['pubyear'] <= max_year, ['pmcid','ID']].drop_duplicates()
     sub.to_parquet(path, index=False)
-    logging.info(f"已构建并缓存图结构边（== {max_year}）：{len(sub)} 条 -> {path}")
+    logging.info(f"已构建并缓存图结构边（<= {max_year}）：{len(sub)} 条 -> {path}")
     return sub
 
 # =========================
@@ -293,7 +293,7 @@ def make_edge_labels_for_years_with_split_cached(
         return empty
 
     if restrict_nodes_to_history:
-        hist_soft = data_df.loc[data_df['pubyear'] == history_max_year, 'ID'].unique()
+        hist_soft = data_df.loc[data_df['pubyear'] <= history_max_year, 'ID'].unique()
     else:
         hist_soft = data_df['ID'].unique()
 

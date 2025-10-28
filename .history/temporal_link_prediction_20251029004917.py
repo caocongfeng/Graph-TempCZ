@@ -293,7 +293,7 @@ def make_edge_labels_for_years_with_split_cached(
         return empty
 
     if restrict_nodes_to_history:
-        hist_soft = data_df.loc[data_df['pubyear'] == history_max_year, 'ID'].unique()
+        hist_soft = data_df.loc[data_df['pubyear'] <= history_max_year, 'ID'].unique()
     else:
         hist_soft = data_df['ID'].unique()
 
